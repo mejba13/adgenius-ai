@@ -2,9 +2,7 @@
 
 import { useState, useEffect, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
-import { Check, Zap, Loader2, AlertCircle, CheckCircle } from 'lucide-react'
+import { Check, Zap, Loader2, AlertCircle, CheckCircle, CreditCard, Sparkles } from 'lucide-react'
 
 const PLANS = [
   {
@@ -21,6 +19,7 @@ const PLANS = [
     ],
     limit: 10,
     popular: false,
+    gradient: 'from-slate-500 to-slate-600',
   },
   {
     id: 'pro',
@@ -38,6 +37,7 @@ const PLANS = [
     ],
     limit: 50,
     popular: true,
+    gradient: 'from-blue-600 to-purple-600',
   },
 ]
 
@@ -66,7 +66,6 @@ function BillingContent() {
   useEffect(() => {
     fetchData()
 
-    // Check for success/cancel from Stripe
     if (searchParams.get('success') === 'true') {
       setMessage({ type: 'success', text: 'Successfully upgraded to Pro! Your subscription is now active.' })
     } else if (searchParams.get('canceled') === 'true') {
@@ -76,7 +75,6 @@ function BillingContent() {
 
   const fetchData = async () => {
     try {
-      // Fetch profile with subscription data
       const profileRes = await fetch('/api/profile')
       const profileData = await profileRes.json()
 
@@ -88,8 +86,6 @@ function BillingContent() {
         })
       }
 
-      // Fetch usage - would need a usage API endpoint
-      // For now, we'll use creatives count
       const creativesRes = await fetch('/api/creatives')
       const creativesData = await creativesRes.json()
       if (creativesData.creatives) {
@@ -152,7 +148,10 @@ function BillingContent() {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
-        <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
+          <p className="text-slate-400">Loading billing info...</p>
+        </div>
       </div>
     )
   }
@@ -161,168 +160,201 @@ function BillingContent() {
   const usagePercent = Math.min(100, (usage.credits_used / currentPlan.limit) * 100)
 
   return (
-    <div className="mx-auto max-w-4xl space-y-6">
+    <div className="max-w-4xl mx-auto space-y-8 animate-fade-in-up">
+      {/* Header */}
       <div>
-        <h2 className="text-2xl font-bold text-gray-900">Billing & Subscription</h2>
-        <p className="text-gray-600">
+        <h1 className="text-3xl font-bold text-white">Billing & Subscription</h1>
+        <p className="text-slate-400 mt-1">
           Manage your subscription and billing information
         </p>
       </div>
 
       {/* Status Messages */}
       {message && (
-        <div className={`flex items-center gap-2 p-4 rounded-lg ${
-          message.type === 'success' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'
+        <div className={`flex items-center gap-3 p-4 rounded-xl ${
+          message.type === 'success'
+            ? 'bg-emerald-500/10 border border-emerald-500/20 text-emerald-400'
+            : 'bg-red-500/10 border border-red-500/20 text-red-400'
         }`}>
           {message.type === 'success' ? (
-            <CheckCircle className="h-5 w-5" />
+            <CheckCircle className="h-5 w-5 flex-shrink-0" />
           ) : (
-            <AlertCircle className="h-5 w-5" />
+            <AlertCircle className="h-5 w-5 flex-shrink-0" />
           )}
           {message.text}
         </div>
       )}
 
-      {/* Subscription Status Alert */}
+      {/* Subscription Alerts */}
       {subscription.subscription_status === 'past_due' && (
-        <div className="flex items-center gap-2 p-4 rounded-lg bg-yellow-50 text-yellow-700">
-          <AlertCircle className="h-5 w-5" />
+        <div className="flex items-center gap-3 p-4 rounded-xl bg-yellow-500/10 border border-yellow-500/20 text-yellow-400">
+          <AlertCircle className="h-5 w-5 flex-shrink-0" />
           Your payment is past due. Please update your payment method to continue using Pro features.
         </div>
       )}
 
       {subscription.subscription_status === 'cancelled' && subscription.subscription_tier === 'pro' && (
-        <div className="flex items-center gap-2 p-4 rounded-lg bg-yellow-50 text-yellow-700">
-          <AlertCircle className="h-5 w-5" />
+        <div className="flex items-center gap-3 p-4 rounded-xl bg-yellow-500/10 border border-yellow-500/20 text-yellow-400">
+          <AlertCircle className="h-5 w-5 flex-shrink-0" />
           Your subscription has been cancelled. You&apos;ll have access until the end of your billing period.
         </div>
       )}
 
       {/* Current Usage */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Current Usage</CardTitle>
-          <CardDescription>
-            Your credit usage for this billing period
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-3xl font-bold">{usage.credits_used} / {currentPlan.limit}</p>
-              <p className="text-sm text-gray-500">creatives used</p>
-            </div>
-            <div className="text-right">
-              <p className="text-sm font-medium capitalize">{currentPlan.name} Plan</p>
-              <p className="text-sm text-gray-500">
-                {subscription.subscription_tier === 'pro' ? '50 creatives/month' : '10 total creatives'}
-              </p>
-            </div>
+      <div className="rounded-2xl bg-slate-900/50 border border-white/10 p-6">
+        <div className="flex items-center gap-3 mb-6">
+          <div className="p-2 rounded-lg bg-gradient-to-br from-blue-500 to-cyan-500">
+            <CreditCard className="w-5 h-5 text-white" />
           </div>
-          <div className="mt-4 h-2 w-full rounded-full bg-gray-100">
-            <div
-              className={`h-2 rounded-full transition-all ${
-                usagePercent >= 90 ? 'bg-red-500' : usagePercent >= 70 ? 'bg-yellow-500' : 'bg-blue-600'
-              }`}
-              style={{ width: `${usagePercent}%` }}
-            />
+          <div>
+            <h2 className="text-lg font-semibold text-white">Current Usage</h2>
+            <p className="text-sm text-slate-400">Your credit usage this billing period</p>
           </div>
-          {usagePercent >= 90 && (
-            <p className="mt-2 text-sm text-red-500">
-              You&apos;re running low on credits. {subscription.subscription_tier === 'free' ? 'Upgrade to Pro for more!' : 'Credits reset at the start of your billing period.'}
+        </div>
+
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <p className="text-4xl font-bold text-white">{usage.credits_used} / {currentPlan.limit}</p>
+            <p className="text-sm text-slate-400 mt-1">creatives used</p>
+          </div>
+          <div className="text-right">
+            <p className="text-sm font-medium text-white capitalize">{currentPlan.name} Plan</p>
+            <p className="text-sm text-slate-400">
+              {subscription.subscription_tier === 'pro' ? '50 creatives/month' : '10 total creatives'}
             </p>
-          )}
-        </CardContent>
-      </Card>
+          </div>
+        </div>
+
+        <div className="w-full h-3 bg-slate-800 rounded-full overflow-hidden">
+          <div
+            className={`h-full rounded-full transition-all ${
+              usagePercent >= 90
+                ? 'bg-gradient-to-r from-red-500 to-orange-500'
+                : usagePercent >= 70
+                ? 'bg-gradient-to-r from-yellow-500 to-orange-500'
+                : 'bg-gradient-to-r from-blue-500 to-purple-500'
+            }`}
+            style={{ width: `${usagePercent}%` }}
+          />
+        </div>
+
+        {usagePercent >= 90 && (
+          <p className="mt-3 text-sm text-red-400">
+            You&apos;re running low on credits.{' '}
+            {subscription.subscription_tier === 'free'
+              ? 'Upgrade to Pro for more!'
+              : 'Credits reset at the start of your billing period.'}
+          </p>
+        )}
+      </div>
 
       {/* Plans */}
       <div className="grid gap-6 md:grid-cols-2">
         {PLANS.map((plan) => {
           const isCurrentPlan = plan.id === subscription.subscription_tier
           return (
-            <Card
+            <div
               key={plan.id}
-              className={`${plan.popular ? 'border-blue-600 shadow-lg' : ''} ${isCurrentPlan ? 'ring-2 ring-blue-500' : ''}`}
+              className={`relative rounded-2xl overflow-hidden ${
+                plan.popular
+                  ? 'bg-gradient-to-br from-blue-600/20 to-purple-600/20 border-2 border-blue-500/50'
+                  : 'bg-slate-900/50 border border-white/10'
+              } ${isCurrentPlan ? 'ring-2 ring-blue-500 ring-offset-2 ring-offset-slate-950' : ''}`}
             >
+              {/* Popular Badge */}
               {plan.popular && (
-                <div className="bg-blue-600 text-white text-center py-1 text-sm font-medium">
-                  Most Popular
+                <div className="absolute top-0 right-0">
+                  <div className="flex items-center gap-1 px-3 py-1.5 bg-gradient-to-r from-blue-600 to-purple-600 text-white text-xs font-semibold rounded-bl-xl">
+                    <Sparkles className="w-3 h-3" />
+                    Most Popular
+                  </div>
                 </div>
               )}
-              <CardHeader>
-                <CardTitle className="flex items-center justify-between">
-                  {plan.name}
-                  {plan.popular && <Zap className="h-5 w-5 text-yellow-500" />}
-                </CardTitle>
-                <div className="flex items-baseline">
-                  <span className="text-3xl font-bold">{plan.price}</span>
-                  <span className="text-gray-500 ml-1">{plan.period}</span>
+
+              <div className="p-6">
+                <div className="mb-4">
+                  <h3 className="text-xl font-bold text-white flex items-center gap-2">
+                    {plan.name}
+                    {plan.popular && <Zap className="w-5 h-5 text-yellow-400" />}
+                  </h3>
+                  <div className="flex items-baseline mt-2">
+                    <span className="text-4xl font-bold text-white">{plan.price}</span>
+                    <span className="text-slate-400 ml-1">{plan.period}</span>
+                  </div>
+                  <p className="text-slate-400 text-sm mt-2">{plan.description}</p>
                 </div>
-                <CardDescription>{plan.description}</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <ul className="space-y-2">
+
+                <ul className="space-y-3 mb-6">
                   {plan.features.map((feature) => (
-                    <li key={feature} className="flex items-center gap-2">
-                      <Check className="h-4 w-4 text-green-500" />
-                      <span className="text-sm">{feature}</span>
+                    <li key={feature} className="flex items-center gap-3">
+                      <div className={`p-1 rounded-full bg-gradient-to-br ${plan.gradient}`}>
+                        <Check className="h-3 w-3 text-white" />
+                      </div>
+                      <span className="text-sm text-slate-300">{feature}</span>
                     </li>
                   ))}
                 </ul>
-              </CardContent>
-              <CardFooter>
+
                 {isCurrentPlan ? (
-                  <Button className="w-full" variant="outline" disabled>
+                  <button
+                    disabled
+                    className="w-full py-3 rounded-xl bg-slate-800 border border-white/10 text-slate-400 font-medium cursor-not-allowed"
+                  >
                     Current Plan
-                  </Button>
+                  </button>
                 ) : plan.id === 'pro' ? (
-                  <Button
-                    className="w-full"
+                  <button
                     onClick={handleUpgrade}
                     disabled={actionLoading}
+                    className="w-full py-3 rounded-xl bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white font-semibold shadow-lg shadow-blue-500/20 transition-all disabled:opacity-50"
                   >
                     {actionLoading ? (
-                      <>
-                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      <span className="flex items-center justify-center gap-2">
+                        <Loader2 className="h-4 w-4 animate-spin" />
                         Loading...
-                      </>
+                      </span>
                     ) : (
                       'Upgrade to Pro'
                     )}
-                  </Button>
+                  </button>
                 ) : (
-                  <Button className="w-full" variant="outline" disabled>
+                  <button
+                    disabled
+                    className="w-full py-3 rounded-xl bg-slate-800 border border-white/10 text-slate-400 font-medium cursor-not-allowed"
+                  >
                     Downgrade
-                  </Button>
+                  </button>
                 )}
-              </CardFooter>
-            </Card>
+              </div>
+            </div>
           )
         })}
       </div>
 
       {/* Billing Management */}
       {subscription.stripe_customer_id && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Manage Subscription</CardTitle>
-            <CardDescription>
-              Update payment method, view invoices, or cancel subscription
-            </CardDescription>
-          </CardHeader>
-          <CardFooter>
-            <Button variant="outline" onClick={handleManageBilling} disabled={actionLoading}>
+        <div className="rounded-2xl bg-slate-900/50 border border-white/10 p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-lg font-semibold text-white">Manage Subscription</h2>
+              <p className="text-sm text-slate-400 mt-1">
+                Update payment method, view invoices, or cancel subscription
+              </p>
+            </div>
+            <button
+              onClick={handleManageBilling}
+              disabled={actionLoading}
+              className="flex items-center gap-2 px-5 py-2.5 bg-slate-800 border border-white/10 rounded-xl font-medium text-white hover:bg-slate-700 transition-all disabled:opacity-50"
+            >
               {actionLoading ? (
-                <>
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  Loading...
-                </>
+                <Loader2 className="h-4 w-4 animate-spin" />
               ) : (
-                'Manage Billing'
+                <CreditCard className="h-4 w-4" />
               )}
-            </Button>
-          </CardFooter>
-        </Card>
+              Manage Billing
+            </button>
+          </div>
+        </div>
       )}
     </div>
   )
@@ -332,7 +364,10 @@ export default function BillingPage() {
   return (
     <Suspense fallback={
       <div className="flex items-center justify-center py-20">
-        <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
+          <p className="text-slate-400">Loading billing info...</p>
+        </div>
       </div>
     }>
       <BillingContent />

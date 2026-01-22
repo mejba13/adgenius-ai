@@ -44,15 +44,24 @@ export default async function DashboardLayout({
   const creditsUsed = 0
 
   return (
-    <div className="flex h-screen bg-gray-50">
+    <div className="flex h-screen bg-slate-950">
+      {/* Animated background elements */}
+      <div className="fixed inset-0 -z-10 overflow-hidden">
+        <div className="absolute top-0 left-1/4 w-[500px] h-[500px] bg-blue-500/10 rounded-full blur-[120px]" />
+        <div className="absolute bottom-0 right-1/4 w-[400px] h-[400px] bg-purple-500/10 rounded-full blur-[120px]" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-cyan-500/5 rounded-full blur-[150px]" />
+      </div>
+
       <Sidebar />
       <div className="flex flex-1 flex-col overflow-hidden">
-        <Header
-          user={user}
-          creditsUsed={creditsUsed}
-          subscriptionTier={subscriptionTier}
-        />
-        <main className="flex-1 overflow-auto p-6">
+        <div className="relative z-50">
+          <Header
+            user={user}
+            creditsUsed={creditsUsed}
+            subscriptionTier={subscriptionTier}
+          />
+        </div>
+        <main className="flex-1 overflow-auto p-8 relative z-0">
           {children}
         </main>
       </div>

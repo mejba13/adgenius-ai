@@ -3,11 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Save, Trash2, Loader2, Check } from 'lucide-react'
+import { Save, Trash2, Loader2, Check, User, Lock, AlertTriangle } from 'lucide-react'
 
 export default function SettingsPage() {
   const router = useRouter()
@@ -123,149 +119,183 @@ export default function SettingsPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
-        <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
+          <p className="text-slate-400">Loading settings...</p>
+        </div>
       </div>
     )
   }
 
   return (
-    <div className="mx-auto max-w-2xl space-y-6">
+    <div className="max-w-2xl mx-auto space-y-8 animate-fade-in-up">
+      {/* Header */}
       <div>
-        <h2 className="text-2xl font-bold text-gray-900">Settings</h2>
-        <p className="text-gray-600">
+        <h1 className="text-3xl font-bold text-white">Settings</h1>
+        <p className="text-slate-400 mt-1">
           Manage your account settings and preferences
         </p>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Profile</CardTitle>
-          <CardDescription>
-            Update your personal information
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
+      {/* Profile Section */}
+      <div className="rounded-2xl bg-slate-900/50 border border-white/10 overflow-hidden">
+        <div className="p-6 border-b border-white/5">
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-lg bg-gradient-to-br from-blue-500 to-cyan-500">
+              <User className="w-5 h-5 text-white" />
+            </div>
+            <div>
+              <h2 className="text-lg font-semibold text-white">Profile</h2>
+              <p className="text-sm text-slate-400">Update your personal information</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="p-6 space-y-6">
           <div className="space-y-2">
-            <Label htmlFor="name">Full Name</Label>
-            <Input
-              id="name"
+            <label className="text-sm font-medium text-white">Full Name</label>
+            <input
+              type="text"
               value={profile.name}
               onChange={(e) => setProfile(prev => ({ ...prev, name: e.target.value }))}
               placeholder="Your name"
+              className="w-full h-12 px-4 bg-slate-800/50 border border-white/10 rounded-xl text-white placeholder:text-slate-500 focus:outline-none focus:border-blue-500/50 focus:ring-2 focus:ring-blue-500/20 transition-all"
             />
           </div>
+
           <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
-            <Input
-              id="email"
+            <label className="text-sm font-medium text-white">Email</label>
+            <input
               type="email"
               value={profile.email}
               disabled
-              className="bg-gray-50"
+              className="w-full h-12 px-4 bg-slate-800/30 border border-white/5 rounded-xl text-slate-400 cursor-not-allowed"
             />
-            <p className="text-xs text-gray-500">
+            <p className="text-xs text-slate-500">
               Email cannot be changed. Contact support if needed.
             </p>
           </div>
+
           <div className="flex justify-end">
-            <Button onClick={handleSave} disabled={saving}>
+            <button
+              onClick={handleSave}
+              disabled={saving}
+              className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 rounded-xl font-semibold text-white shadow-lg shadow-blue-500/20 transition-all disabled:opacity-50"
+            >
               {saving ? (
                 <>
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  <Loader2 className="h-4 w-4 animate-spin" />
                   Saving...
                 </>
               ) : saved ? (
                 <>
-                  <Check className="h-4 w-4 mr-2" />
-                  Saved
+                  <Check className="h-4 w-4" />
+                  Saved!
                 </>
               ) : (
                 <>
-                  <Save className="h-4 w-4 mr-2" />
+                  <Save className="h-4 w-4" />
                   Save Changes
                 </>
               )}
-            </Button>
+            </button>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Password</CardTitle>
-          <CardDescription>
-            Change your password
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
+      {/* Password Section */}
+      <div className="rounded-2xl bg-slate-900/50 border border-white/10 overflow-hidden">
+        <div className="p-6 border-b border-white/5">
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-lg bg-gradient-to-br from-purple-500 to-pink-500">
+              <Lock className="w-5 h-5 text-white" />
+            </div>
+            <div>
+              <h2 className="text-lg font-semibold text-white">Password</h2>
+              <p className="text-sm text-slate-400">Change your password</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="p-6 space-y-6">
           <div className="space-y-2">
-            <Label htmlFor="new_password">New Password</Label>
-            <Input
-              id="new_password"
+            <label className="text-sm font-medium text-white">New Password</label>
+            <input
               type="password"
               placeholder="••••••••"
               value={passwords.new}
               onChange={(e) => setPasswords(prev => ({ ...prev, new: e.target.value }))}
+              className="w-full h-12 px-4 bg-slate-800/50 border border-white/10 rounded-xl text-white placeholder:text-slate-500 focus:outline-none focus:border-blue-500/50 focus:ring-2 focus:ring-blue-500/20 transition-all"
             />
           </div>
+
           <div className="space-y-2">
-            <Label htmlFor="confirm_password">Confirm New Password</Label>
-            <Input
-              id="confirm_password"
+            <label className="text-sm font-medium text-white">Confirm New Password</label>
+            <input
               type="password"
               placeholder="••••••••"
               value={passwords.confirm}
               onChange={(e) => setPasswords(prev => ({ ...prev, confirm: e.target.value }))}
+              className="w-full h-12 px-4 bg-slate-800/50 border border-white/10 rounded-xl text-white placeholder:text-slate-500 focus:outline-none focus:border-blue-500/50 focus:ring-2 focus:ring-blue-500/20 transition-all"
             />
           </div>
+
           {passwordError && (
-            <p className="text-sm text-red-500">{passwordError}</p>
+            <p className="text-sm text-red-400">{passwordError}</p>
           )}
           {passwordSuccess && (
-            <p className="text-sm text-green-500">Password updated successfully!</p>
+            <p className="text-sm text-emerald-400">Password updated successfully!</p>
           )}
+
           <div className="flex justify-end">
-            <Button
-              variant="outline"
+            <button
               onClick={handlePasswordChange}
               disabled={!passwords.new || !passwords.confirm}
+              className="flex items-center gap-2 px-5 py-2.5 bg-slate-800 border border-white/10 rounded-xl font-medium text-white hover:bg-slate-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Update Password
-            </Button>
+            </button>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
-      <Card className="border-red-200">
-        <CardHeader>
-          <CardTitle className="text-red-600">Danger Zone</CardTitle>
-          <CardDescription>
-            Irreversible actions that affect your account
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
+      {/* Danger Zone */}
+      <div className="rounded-2xl bg-red-500/5 border border-red-500/20 overflow-hidden">
+        <div className="p-6 border-b border-red-500/10">
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-lg bg-gradient-to-br from-red-500 to-orange-500">
+              <AlertTriangle className="w-5 h-5 text-white" />
+            </div>
+            <div>
+              <h2 className="text-lg font-semibold text-red-400">Danger Zone</h2>
+              <p className="text-sm text-slate-400">Irreversible actions</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="font-medium">Delete Account</p>
-              <p className="text-sm text-gray-500">
+              <p className="font-medium text-white">Delete Account</p>
+              <p className="text-sm text-slate-400">
                 Permanently delete your account and all data
               </p>
             </div>
-            <Button
-              variant="destructive"
+            <button
               onClick={handleDeleteAccount}
               disabled={deleting}
+              className="flex items-center gap-2 px-5 py-2.5 bg-red-500/10 border border-red-500/20 rounded-xl font-medium text-red-400 hover:bg-red-500/20 transition-all disabled:opacity-50"
             >
               {deleting ? (
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                <Loader2 className="h-4 w-4 animate-spin" />
               ) : (
-                <Trash2 className="h-4 w-4 mr-2" />
+                <Trash2 className="h-4 w-4" />
               )}
               Delete Account
-            </Button>
+            </button>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </div>
   )
 }

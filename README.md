@@ -229,6 +229,14 @@ For production, set up the Stripe webhook endpoint:
 
 MIT License - see [LICENSE](LICENSE) for details.
 
+## Hire / Work with Me
+
+- **Fiverr** (custom builds, integrations, performance): [fiverr.com/s/EgxYmWD](https://www.fiverr.com/s/EgxYmWD)
+- **Mejba Personal Portfolio**: [mejba.me](https://www.mejba.me)
+- **Ramlit Limited**: [ramlit.com](https://www.ramlit.com)
+- **ColorPark Creative Agency**: [colorpark.io](https://www.colorpark.io)
+- **xCyberSecurity Global Services**: [xcybersecurity.io](https://www.xcybersecurity.io)
+
 ## Support
 
 For issues and feature requests, please open an issue on GitHub.

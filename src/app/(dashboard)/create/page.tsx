@@ -1,58 +1,45 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Textarea } from '@/components/ui/textarea'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
-import { ArrowLeft, ArrowRight, Loader2, Sparkles } from 'lucide-react'
+import { ArrowLeft, ArrowRight, Loader2, Sparkles, Check, Copy, Save, Wand2 } from 'lucide-react'
 import type { Platform, Tone, GenerationInput, CopyVariation, StyleGroup } from '@/types'
 
 const STEPS = [
-  { id: 'product', title: 'Product Info' },
-  { id: 'audience', title: 'Target Audience' },
-  { id: 'platform', title: 'Platform & Tone' },
-  { id: 'generate', title: 'Generate' },
+  { id: 'product', title: 'Product Info', description: 'Tell us about your product' },
+  { id: 'audience', title: 'Target Audience', description: 'Define who you want to reach' },
+  { id: 'platform', title: 'Platform & Tone', description: 'Choose your ad settings' },
+  { id: 'generate', title: 'Generate', description: 'Review and create' },
 ]
 
-const PLATFORMS: { value: Platform; label: string }[] = [
-  { value: 'meta', label: 'Meta (Facebook/Instagram)' },
-  { value: 'google', label: 'Google Ads' },
-  { value: 'tiktok', label: 'TikTok' },
-  { value: 'linkedin', label: 'LinkedIn' },
+const PLATFORMS: { value: Platform; label: string; icon: string; color: string }[] = [
+  { value: 'meta', label: 'Meta', icon: '📘', color: 'from-blue-500 to-blue-600' },
+  { value: 'google', label: 'Google', icon: '🔍', color: 'from-red-500 to-yellow-500' },
+  { value: 'tiktok', label: 'TikTok', icon: '🎵', color: 'from-pink-500 to-cyan-500' },
+  { value: 'linkedin', label: 'LinkedIn', icon: '💼', color: 'from-blue-600 to-blue-700' },
 ]
 
-const TONES: { value: Tone; label: string; description: string }[] = [
-  { value: 'professional', label: 'Professional', description: 'Formal and business-appropriate' },
-  { value: 'casual', label: 'Casual', description: 'Friendly and conversational' },
-  { value: 'urgent', label: 'Urgent', description: 'Creates FOMO and urgency' },
-  { value: 'playful', label: 'Playful', description: 'Fun and lighthearted' },
-  { value: 'inspirational', label: 'Inspirational', description: 'Motivating and uplifting' },
+const TONES: { value: Tone; label: string; description: string; emoji: string }[] = [
+  { value: 'professional', label: 'Professional', description: 'Formal and business-appropriate', emoji: '👔' },
+  { value: 'casual', label: 'Casual', description: 'Friendly and conversational', emoji: '😊' },
+  { value: 'urgent', label: 'Urgent', description: 'Creates FOMO and urgency', emoji: '⚡' },
+  { value: 'playful', label: 'Playful', description: 'Fun and lighthearted', emoji: '🎉' },
+  { value: 'inspirational', label: 'Inspirational', description: 'Motivating and uplifting', emoji: '✨' },
 ]
 
-const STYLE_LABELS: Record<StyleGroup, string> = {
-  'urgency': 'Urgency / FOMO',
-  'benefit': 'Benefit-Focused',
-  'problem-solution': 'Problem / Solution',
-  'social-proof': 'Social Proof',
-  'curiosity': 'Curiosity / Question',
+const STYLE_LABELS: Record<StyleGroup, { label: string; color: string }> = {
+  'urgency': { label: 'Urgency / FOMO', color: 'from-red-500 to-orange-500' },
+  'benefit': { label: 'Benefit-Focused', color: 'from-emerald-500 to-green-500' },
+  'problem-solution': { label: 'Problem / Solution', color: 'from-blue-500 to-cyan-500' },
+  'social-proof': { label: 'Social Proof', color: 'from-purple-500 to-pink-500' },
+  'curiosity': { label: 'Curiosity / Question', color: 'from-yellow-500 to-orange-500' },
 }
 
 export default function CreatePage() {
-  const router = useRouter()
   const [currentStep, setCurrentStep] = useState(0)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [results, setResults] = useState<CopyVariation[] | null>(null)
+  const [copiedId, setCopiedId] = useState<string | null>(null)
 
   // Form state
   const [formData, setFormData] = useState<GenerationInput>({
@@ -135,8 +122,14 @@ export default function CreatePage() {
     }
   }
 
-  const handleSave = async (variation: CopyVariation) => {
-    // TODO: Save to database
+  const handleCopy = (variation: CopyVariation) => {
+    const text = `${variation.headline}\n\n${variation.primary_text}\n\n${variation.description}\n\n${variation.cta}`
+    navigator.clipboard.writeText(text)
+    setCopiedId(variation.id)
+    setTimeout(() => setCopiedId(null), 2000)
+  }
+
+  const handleSave = async (_variation: CopyVariation) => {
     alert('Saved! (Database not connected yet)')
   }
 
@@ -150,75 +143,99 @@ export default function CreatePage() {
     }, {} as Record<StyleGroup, CopyVariation[]>)
 
     return (
-      <div className="space-y-6">
+      <div className="space-y-8 animate-fade-in-up">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-2xl font-bold text-gray-900">Generated Copy</h2>
-            <p className="text-gray-600">
+            <h1 className="text-3xl font-bold text-white">Generated Copy</h1>
+            <p className="text-slate-400 mt-1">
               5 variations for {PLATFORMS.find(p => p.value === formData.platform)?.label}
             </p>
           </div>
-          <div className="flex gap-2">
-            <Button variant="outline" onClick={() => setResults(null)}>
-              <ArrowLeft className="h-4 w-4 mr-2" />
+          <div className="flex gap-3">
+            <button
+              onClick={() => setResults(null)}
+              className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-slate-800 border border-white/10 text-white hover:bg-slate-700 transition-colors"
+            >
+              <ArrowLeft className="h-4 w-4" />
               Edit Input
-            </Button>
-            <Button onClick={handleGenerate} disabled={loading}>
+            </button>
+            <button
+              onClick={handleGenerate}
+              disabled={loading}
+              className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white font-semibold shadow-lg shadow-blue-500/20 transition-all"
+            >
               {loading ? (
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                <Loader2 className="h-4 w-4 animate-spin" />
               ) : (
-                <Sparkles className="h-4 w-4 mr-2" />
+                <Sparkles className="h-4 w-4" />
               )}
               Regenerate
-            </Button>
+            </button>
           </div>
         </div>
 
         {Object.entries(groupedResults).map(([style, variations]) => (
           <div key={style} className="space-y-4">
-            <h3 className="text-lg font-semibold text-gray-700">
-              {STYLE_LABELS[style as StyleGroup]}
-            </h3>
-            {variations.map((variation) => (
-              <Card key={variation.id}>
-                <CardContent className="pt-6">
-                  <div className="grid gap-4 md:grid-cols-2">
+            <div className="flex items-center gap-3">
+              <div className={`h-1 w-8 rounded-full bg-gradient-to-r ${STYLE_LABELS[style as StyleGroup].color}`} />
+              <h2 className="text-lg font-semibold text-white">
+                {STYLE_LABELS[style as StyleGroup].label}
+              </h2>
+            </div>
+            <div className="grid gap-4">
+              {variations.map((variation) => (
+                <div
+                  key={variation.id}
+                  className="group relative overflow-hidden rounded-2xl bg-slate-900/50 border border-white/10 p-6 hover:border-white/20 transition-all"
+                >
+                  <div className="grid gap-4 md:grid-cols-2 mb-4">
                     <div>
-                      <Label className="text-xs text-gray-500">Headline</Label>
-                      <p className="font-medium">{variation.headline}</p>
+                      <label className="text-xs text-slate-500 uppercase tracking-wider">Headline</label>
+                      <p className="text-white font-medium mt-1">{variation.headline}</p>
                     </div>
                     <div>
-                      <Label className="text-xs text-gray-500">CTA</Label>
-                      <p className="font-medium">{variation.cta}</p>
+                      <label className="text-xs text-slate-500 uppercase tracking-wider">CTA</label>
+                      <p className="text-white font-medium mt-1">{variation.cta}</p>
                     </div>
                   </div>
-                  <div className="mt-4">
-                    <Label className="text-xs text-gray-500">Primary Text</Label>
-                    <p className="mt-1">{variation.primary_text}</p>
+                  <div className="mb-4">
+                    <label className="text-xs text-slate-500 uppercase tracking-wider">Primary Text</label>
+                    <p className="text-slate-300 mt-1">{variation.primary_text}</p>
                   </div>
                   {variation.description && (
-                    <div className="mt-4">
-                      <Label className="text-xs text-gray-500">Description</Label>
-                      <p className="mt-1 text-gray-600">{variation.description}</p>
+                    <div className="mb-4">
+                      <label className="text-xs text-slate-500 uppercase tracking-wider">Description</label>
+                      <p className="text-slate-400 mt-1">{variation.description}</p>
                     </div>
                   )}
-                  <div className="mt-4 flex justify-end gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => navigator.clipboard.writeText(
-                        `${variation.headline}\n\n${variation.primary_text}\n\n${variation.description}\n\n${variation.cta}`
-                      )}
+                  <div className="flex justify-end gap-2 pt-4 border-t border-white/5">
+                    <button
+                      onClick={() => handleCopy(variation)}
+                      className="flex items-center gap-2 px-4 py-2 rounded-lg bg-slate-800 border border-white/10 text-sm text-white hover:bg-slate-700 transition-colors"
                     >
-                      Copy
-                    </Button>
-                    <Button size="sm" onClick={() => handleSave(variation)}>
+                      {copiedId === variation.id ? (
+                        <>
+                          <Check className="h-4 w-4 text-emerald-400" />
+                          Copied!
+                        </>
+                      ) : (
+                        <>
+                          <Copy className="h-4 w-4" />
+                          Copy
+                        </>
+                      )}
+                    </button>
+                    <button
+                      onClick={() => handleSave(variation)}
+                      className="flex items-center gap-2 px-4 py-2 rounded-lg bg-gradient-to-r from-blue-600 to-purple-600 text-sm text-white font-medium hover:from-blue-500 hover:to-purple-500 transition-all"
+                    >
+                      <Save className="h-4 w-4" />
                       Save
-                    </Button>
+                    </button>
                   </div>
-                </CardContent>
-              </Card>
-            ))}
+                </div>
+              ))}
+            </div>
           </div>
         ))}
       </div>
@@ -226,10 +243,10 @@ export default function CreatePage() {
   }
 
   return (
-    <div className="mx-auto max-w-2xl space-y-6">
+    <div className="max-w-3xl mx-auto space-y-8 animate-fade-in-up">
       <div>
-        <h2 className="text-2xl font-bold text-gray-900">Create Ad Copy</h2>
-        <p className="text-gray-600">
+        <h1 className="text-3xl font-bold text-white">Create Ad Copy</h1>
+        <p className="text-slate-400 mt-1">
           Fill in your product details to generate high-converting ad copy
         </p>
       </div>
@@ -237,94 +254,94 @@ export default function CreatePage() {
       {/* Progress Steps */}
       <div className="flex items-center justify-between">
         {STEPS.map((step, index) => (
-          <div
-            key={step.id}
-            className="flex items-center"
-          >
-            <div
-              className={`flex h-8 w-8 items-center justify-center rounded-full text-sm font-medium ${
-                index <= currentStep
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-gray-200 text-gray-500'
-              }`}
-            >
-              {index + 1}
-            </div>
-            <span
-              className={`ml-2 text-sm ${
-                index <= currentStep ? 'text-gray-900' : 'text-gray-500'
-              }`}
-            >
-              {step.title}
-            </span>
-            {index < STEPS.length - 1 && (
+          <div key={step.id} className="flex items-center flex-1">
+            <div className="flex flex-col items-center">
               <div
-                className={`mx-4 h-0.5 w-8 ${
-                  index < currentStep ? 'bg-blue-600' : 'bg-gray-200'
+                className={`flex h-10 w-10 items-center justify-center rounded-xl text-sm font-bold transition-all ${
+                  index < currentStep
+                    ? 'bg-gradient-to-br from-emerald-500 to-green-600 text-white shadow-lg shadow-emerald-500/20'
+                    : index === currentStep
+                    ? 'bg-gradient-to-br from-blue-500 to-purple-600 text-white shadow-lg shadow-blue-500/20'
+                    : 'bg-slate-800 text-slate-500 border border-white/10'
                 }`}
-              />
+              >
+                {index < currentStep ? <Check className="w-5 h-5" /> : index + 1}
+              </div>
+              <span className={`mt-2 text-xs font-medium ${
+                index <= currentStep ? 'text-white' : 'text-slate-500'
+              }`}>
+                {step.title}
+              </span>
+            </div>
+            {index < STEPS.length - 1 && (
+              <div className={`flex-1 h-0.5 mx-4 rounded-full ${
+                index < currentStep ? 'bg-gradient-to-r from-emerald-500 to-green-500' : 'bg-slate-800'
+              }`} />
             )}
           </div>
         ))}
       </div>
 
       {error && (
-        <div className="p-4 rounded-md bg-red-50 text-red-600 text-sm">
+        <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm">
           {error}
         </div>
       )}
 
-      <Card>
-        <CardHeader>
-          <CardTitle>{STEPS[currentStep].title}</CardTitle>
-          <CardDescription>
-            {currentStep === 0 && 'Tell us about your product or service'}
-            {currentStep === 1 && 'Define who you want to reach'}
-            {currentStep === 2 && 'Choose where and how your ad will appear'}
-            {currentStep === 3 && 'Review and generate your ad copy'}
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
+      {/* Form Card */}
+      <div className="rounded-2xl bg-slate-900/50 border border-white/10 overflow-hidden">
+        <div className="p-6 border-b border-white/5">
+          <h2 className="text-xl font-bold text-white">{STEPS[currentStep].title}</h2>
+          <p className="text-slate-400 text-sm mt-1">{STEPS[currentStep].description}</p>
+        </div>
+
+        <div className="p-6 space-y-6">
           {/* Step 1: Product Info */}
           {currentStep === 0 && (
             <>
               <div className="space-y-2">
-                <Label htmlFor="product_name">Product Name *</Label>
-                <Input
-                  id="product_name"
+                <label className="text-sm font-medium text-white">Product Name *</label>
+                <input
+                  type="text"
                   placeholder="e.g., EcoBottle Pro"
                   value={formData.product_name}
                   onChange={(e) => updateFormData({ product_name: e.target.value })}
+                  className="w-full h-12 px-4 bg-slate-800/50 border border-white/10 rounded-xl text-white placeholder:text-slate-500 focus:outline-none focus:border-blue-500/50 focus:ring-2 focus:ring-blue-500/20 transition-all"
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="product_description">Product Description *</Label>
-                <Textarea
-                  id="product_description"
+                <label className="text-sm font-medium text-white">Product Description *</label>
+                <textarea
                   placeholder="Describe your product in 2-3 sentences..."
                   value={formData.product_description}
                   onChange={(e) => updateFormData({ product_description: e.target.value })}
                   rows={3}
+                  className="w-full px-4 py-3 bg-slate-800/50 border border-white/10 rounded-xl text-white placeholder:text-slate-500 focus:outline-none focus:border-blue-500/50 focus:ring-2 focus:ring-blue-500/20 transition-all resize-none"
                 />
               </div>
               <div className="space-y-2">
-                <Label>Key Benefits (up to 3)</Label>
-                {formData.key_benefits.map((benefit, index) => (
-                  <Input
-                    key={index}
-                    placeholder={`Benefit ${index + 1}`}
-                    value={benefit}
-                    onChange={(e) => updateBenefits(index, e.target.value)}
-                  />
-                ))}
+                <label className="text-sm font-medium text-white">Key Benefits (up to 3)</label>
+                <div className="space-y-2">
+                  {formData.key_benefits.map((benefit, index) => (
+                    <input
+                      key={index}
+                      type="text"
+                      placeholder={`Benefit ${index + 1}`}
+                      value={benefit}
+                      onChange={(e) => updateBenefits(index, e.target.value)}
+                      className="w-full h-12 px-4 bg-slate-800/50 border border-white/10 rounded-xl text-white placeholder:text-slate-500 focus:outline-none focus:border-blue-500/50 focus:ring-2 focus:ring-blue-500/20 transition-all"
+                    />
+                  ))}
+                </div>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="price_point">Price Point (optional)</Label>
-                <Input
-                  id="price_point"
+                <label className="text-sm font-medium text-white">Price Point (optional)</label>
+                <input
+                  type="text"
                   placeholder="e.g., $49"
                   value={formData.price_point || ''}
                   onChange={(e) => updateFormData({ price_point: e.target.value })}
+                  className="w-full h-12 px-4 bg-slate-800/50 border border-white/10 rounded-xl text-white placeholder:text-slate-500 focus:outline-none focus:border-blue-500/50 focus:ring-2 focus:ring-blue-500/20 transition-all"
                 />
               </div>
             </>
@@ -334,45 +351,44 @@ export default function CreatePage() {
           {currentStep === 1 && (
             <>
               <div className="space-y-2">
-                <Label htmlFor="age_range">Age Range *</Label>
-                <Select
-                  value={formData.target_audience.age_range}
-                  onValueChange={(value) =>
-                    updateFormData({
-                      target_audience: { ...formData.target_audience, age_range: value },
-                    })
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select age range" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="18-24">18-24</SelectItem>
-                    <SelectItem value="25-34">25-34</SelectItem>
-                    <SelectItem value="35-44">35-44</SelectItem>
-                    <SelectItem value="45-54">45-54</SelectItem>
-                    <SelectItem value="55+">55+</SelectItem>
-                    <SelectItem value="all">All Ages</SelectItem>
-                  </SelectContent>
-                </Select>
+                <label className="text-sm font-medium text-white">Age Range *</label>
+                <div className="grid grid-cols-3 gap-2">
+                  {['18-24', '25-34', '35-44', '45-54', '55+', 'All Ages'].map((range) => (
+                    <button
+                      key={range}
+                      type="button"
+                      onClick={() => updateFormData({
+                        target_audience: { ...formData.target_audience, age_range: range.toLowerCase().replace(' ', '-') },
+                      })}
+                      className={`px-4 py-3 rounded-xl text-sm font-medium transition-all ${
+                        formData.target_audience.age_range === range.toLowerCase().replace(' ', '-')
+                          ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg shadow-blue-500/20'
+                          : 'bg-slate-800/50 border border-white/10 text-slate-300 hover:bg-slate-800 hover:text-white'
+                      }`}
+                    >
+                      {range}
+                    </button>
+                  ))}
+                </div>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="interests">Interests (comma-separated)</Label>
-                <Input
-                  id="interests"
+                <label className="text-sm font-medium text-white">Interests (comma-separated)</label>
+                <input
+                  type="text"
                   placeholder="e.g., fitness, sustainability, outdoor activities"
                   value={formData.target_audience.interests.join(', ')}
                   onChange={(e) => updateInterests(e.target.value)}
+                  className="w-full h-12 px-4 bg-slate-800/50 border border-white/10 rounded-xl text-white placeholder:text-slate-500 focus:outline-none focus:border-blue-500/50 focus:ring-2 focus:ring-blue-500/20 transition-all"
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="pain_points">Pain Points (comma-separated)</Label>
-                <Textarea
-                  id="pain_points"
+                <label className="text-sm font-medium text-white">Pain Points (comma-separated)</label>
+                <textarea
                   placeholder="e.g., expensive alternatives, poor quality, complex setup"
                   value={formData.target_audience.pain_points.join(', ')}
                   onChange={(e) => updatePainPoints(e.target.value)}
                   rows={2}
+                  className="w-full px-4 py-3 bg-slate-800/50 border border-white/10 rounded-xl text-white placeholder:text-slate-500 focus:outline-none focus:border-blue-500/50 focus:ring-2 focus:ring-blue-500/20 transition-all resize-none"
                 />
               </div>
             </>
@@ -381,43 +397,52 @@ export default function CreatePage() {
           {/* Step 3: Platform & Tone */}
           {currentStep === 2 && (
             <>
-              <div className="space-y-2">
-                <Label>Platform *</Label>
-                <div className="grid grid-cols-2 gap-2">
+              <div className="space-y-3">
+                <label className="text-sm font-medium text-white">Platform *</label>
+                <div className="grid grid-cols-2 gap-3">
                   {PLATFORMS.map((platform) => (
                     <button
                       key={platform.value}
                       type="button"
                       onClick={() => updateFormData({ platform: platform.value })}
-                      className={`rounded-lg border p-3 text-left transition-colors ${
+                      className={`relative overflow-hidden rounded-xl p-4 text-left transition-all ${
                         formData.platform === platform.value
-                          ? 'border-blue-600 bg-blue-50'
-                          : 'border-gray-200 hover:border-gray-300'
+                          ? 'bg-slate-800 border-2 border-blue-500 shadow-lg shadow-blue-500/10'
+                          : 'bg-slate-800/50 border border-white/10 hover:border-white/20'
                       }`}
                     >
-                      <span className="font-medium">{platform.label}</span>
+                      {formData.platform === platform.value && (
+                        <div className={`absolute inset-0 bg-gradient-to-br ${platform.color} opacity-10`} />
+                      )}
+                      <div className="relative flex items-center gap-3">
+                        <span className="text-2xl">{platform.icon}</span>
+                        <span className="font-semibold text-white">{platform.label}</span>
+                      </div>
                     </button>
                   ))}
                 </div>
               </div>
-              <div className="space-y-2">
-                <Label>Tone *</Label>
+              <div className="space-y-3">
+                <label className="text-sm font-medium text-white">Tone *</label>
                 <div className="space-y-2">
                   {TONES.map((tone) => (
                     <button
                       key={tone.value}
                       type="button"
                       onClick={() => updateFormData({ tone: tone.value })}
-                      className={`w-full rounded-lg border p-3 text-left transition-colors ${
+                      className={`w-full rounded-xl p-4 text-left transition-all ${
                         formData.tone === tone.value
-                          ? 'border-blue-600 bg-blue-50'
-                          : 'border-gray-200 hover:border-gray-300'
+                          ? 'bg-slate-800 border-2 border-blue-500 shadow-lg shadow-blue-500/10'
+                          : 'bg-slate-800/50 border border-white/10 hover:border-white/20'
                       }`}
                     >
-                      <span className="font-medium">{tone.label}</span>
-                      <span className="ml-2 text-sm text-gray-500">
-                        — {tone.description}
-                      </span>
+                      <div className="flex items-center gap-3">
+                        <span className="text-xl">{tone.emoji}</span>
+                        <div>
+                          <span className="font-semibold text-white">{tone.label}</span>
+                          <span className="ml-2 text-sm text-slate-400">— {tone.description}</span>
+                        </div>
+                      </div>
                     </button>
                   ))}
                 </div>
@@ -427,73 +452,94 @@ export default function CreatePage() {
 
           {/* Step 4: Review & Generate */}
           {currentStep === 3 && (
-            <div className="space-y-4">
-              <div className="rounded-lg bg-gray-50 p-4 space-y-3">
-                <div>
-                  <span className="text-sm text-gray-500">Product:</span>
-                  <p className="font-medium">{formData.product_name}</p>
+            <div className="space-y-6">
+              <div className="grid gap-4 md:grid-cols-2">
+                <div className="rounded-xl bg-slate-800/50 border border-white/10 p-4">
+                  <label className="text-xs text-slate-500 uppercase tracking-wider">Product</label>
+                  <p className="text-white font-medium mt-1">{formData.product_name}</p>
                 </div>
-                <div>
-                  <span className="text-sm text-gray-500">Platform:</span>
-                  <p className="font-medium">
+                <div className="rounded-xl bg-slate-800/50 border border-white/10 p-4">
+                  <label className="text-xs text-slate-500 uppercase tracking-wider">Platform</label>
+                  <p className="text-white font-medium mt-1 flex items-center gap-2">
+                    <span>{PLATFORMS.find(p => p.value === formData.platform)?.icon}</span>
                     {PLATFORMS.find(p => p.value === formData.platform)?.label}
                   </p>
                 </div>
-                <div>
-                  <span className="text-sm text-gray-500">Tone:</span>
-                  <p className="font-medium">
+                <div className="rounded-xl bg-slate-800/50 border border-white/10 p-4">
+                  <label className="text-xs text-slate-500 uppercase tracking-wider">Tone</label>
+                  <p className="text-white font-medium mt-1 flex items-center gap-2">
+                    <span>{TONES.find(t => t.value === formData.tone)?.emoji}</span>
                     {TONES.find(t => t.value === formData.tone)?.label}
                   </p>
                 </div>
-                <div>
-                  <span className="text-sm text-gray-500">Audience:</span>
-                  <p className="font-medium">{formData.target_audience.age_range}</p>
+                <div className="rounded-xl bg-slate-800/50 border border-white/10 p-4">
+                  <label className="text-xs text-slate-500 uppercase tracking-wider">Audience</label>
+                  <p className="text-white font-medium mt-1">{formData.target_audience.age_range}</p>
                 </div>
               </div>
-              <p className="text-sm text-gray-600">
-                Click generate to create 5 ad copy variations grouped by style.
-                Generation typically takes 10-15 seconds.
-              </p>
+              <div className="rounded-xl bg-gradient-to-br from-blue-600/10 to-purple-600/10 border border-blue-500/20 p-6">
+                <div className="flex items-center gap-3 mb-3">
+                  <Wand2 className="w-5 h-5 text-blue-400" />
+                  <span className="font-semibold text-white">Ready to Generate</span>
+                </div>
+                <p className="text-sm text-slate-400">
+                  Click generate to create 5 ad copy variations grouped by style.
+                  Generation typically takes 10-15 seconds.
+                </p>
+              </div>
             </div>
           )}
 
           {/* Navigation */}
-          <div className="flex justify-between pt-4">
-            <Button
-              variant="outline"
+          <div className="flex justify-between pt-6 border-t border-white/5">
+            <button
               onClick={() => setCurrentStep(prev => prev - 1)}
               disabled={currentStep === 0}
+              className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-medium transition-all ${
+                currentStep === 0
+                  ? 'bg-slate-800/50 text-slate-500 cursor-not-allowed'
+                  : 'bg-slate-800 border border-white/10 text-white hover:bg-slate-700'
+              }`}
             >
-              <ArrowLeft className="h-4 w-4 mr-2" />
+              <ArrowLeft className="h-4 w-4" />
               Back
-            </Button>
+            </button>
 
             {currentStep < STEPS.length - 1 ? (
-              <Button
+              <button
                 onClick={() => setCurrentStep(prev => prev + 1)}
                 disabled={!canProceed()}
+                className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-medium transition-all ${
+                  !canProceed()
+                    ? 'bg-slate-800/50 text-slate-500 cursor-not-allowed'
+                    : 'bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white shadow-lg shadow-blue-500/20'
+                }`}
               >
                 Next
-                <ArrowRight className="h-4 w-4 ml-2" />
-              </Button>
+                <ArrowRight className="h-4 w-4" />
+              </button>
             ) : (
-              <Button onClick={handleGenerate} disabled={loading}>
+              <button
+                onClick={handleGenerate}
+                disabled={loading}
+                className="flex items-center gap-2 px-6 py-2.5 rounded-xl font-semibold bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white shadow-lg shadow-blue-500/20 transition-all disabled:opacity-50"
+              >
                 {loading ? (
                   <>
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    <Loader2 className="h-4 w-4 animate-spin" />
                     Generating...
                   </>
                 ) : (
                   <>
-                    <Sparkles className="h-4 w-4 mr-2" />
+                    <Sparkles className="h-4 w-4" />
                     Generate Copy
                   </>
                 )}
-              </Button>
+              </button>
             )}
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </div>
   )
 }
