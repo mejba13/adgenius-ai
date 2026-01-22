@@ -2,6 +2,9 @@
 
 AI-powered ad copy generation platform for modern marketers. Generate high-converting ad copy for Meta, Google, TikTok, and LinkedIn in seconds.
 
+<img width="1611" height="1278" alt="CleanShot 2026-01-22 at 12  30 06" src="https://github.com/user-attachments/assets/5d93d03e-0f91-4991-825c-dd3dfb4546d9" />
+
+
 ## Features
 
 - **AI-Powered Generation** - Generate 5 professional ad variations in under 15 seconds
